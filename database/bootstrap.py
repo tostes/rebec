@@ -33,6 +33,7 @@ SQL_DIR = BASE_DIR / "sql"
 
 SCHEMA_FILES = [
     "vocabulary_tables.sql",
+    "auth_tables_postgres.sql",
     "clinical_trial_tables.sql",
     "supporting_objects.sql",
     "vocabulary_seed.sql",
