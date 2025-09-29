@@ -29,23 +29,61 @@ The workflow of the clinical trials registry is as follows:
 
 ## 📑 Database Structure
 
-The database has been carefully designed in **PostgreSQL**, with separate sections for:
+The PostgreSQL assets that ship with the project live under `database/`:
 
-- **Vocabulary tables** (countries, interventions, institutions, study phases, etc.)
-- **Core clinical trial tables** (trial metadata, contacts, sponsors, interventions, outcomes, results, etc.)
-- **Supporting objects**: functions, triggers, stored procedures
+- `database/sql/vocabulary_tables.sql` defines reference data such as `countries`,
+  `recruitment_statuses`, `intervention_types`, `study_phases`, and
+  `condition_categories`.
+- `database/sql/clinical_trial_tables.sql` provisions the core `trials`
+  relations, including `trials`, `trial_countries`, `interventions`,
+  `trial_conditions`, `trial_documents`, and related sponsor lookups.
+- `database/sql/supporting_objects.sql` adds cross-cutting helpers (e.g. the
+  `set_updated_at` trigger) that keep timestamps current.
+- `database/sql/vocabulary_seed.sql` pre-populates controlled vocabularies for
+  immediate use after provisioning.
+- `database/sql/auth_tables_postgres.sql` mirrors the authentication tables used
+  by Django so the backend can authenticate against PostgreSQL.
+- `database/stored_procedures/` contains the stored procedure catalog governed
+  by `procedures.json`. Each entry points at SQL source files such as
+  `get_or_create_sponsor.sql` and `create_trial.sql` that are deployed during
+  bootstrapping.
+- `database/bootstrap.py` is the Python entry point that orchestrates schema
+  creation, stored procedure deployment, and seed loading.
 
-A dedicated area in the repository will contain:
-- **DDL scripts** for all tables
-- **Initial inserts** (vocabulary population)
-- **Procedures and triggers**
-- **Python script** to bootstrap the initial database (create + seed vocabulary)
+### Bootstrap workflow
+
+Administrators can provision a PostgreSQL instance end-to-end without inspecting
+individual scripts:
+
+1. Provide connection details via either `DATABASE_URL` **or** the component
+   variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`.
+2. Run the automated bootstrap: `python -m database.bootstrap`.
+3. The script applies the schema files in dependency order, deploys the
+   procedures declared in `database/stored_procedures/procedures.json`, and
+   finally loads the seed data from `database/sql/vocabulary_seed.sql`.
+
+### Key schema components
+
+- **Vocabulary tables:** `countries`, `recruitment_statuses`, `intervention_types`,
+  `study_phases`, `condition_categories`.
+- **Core `ct_*` tables:** `trials`, `trial_countries`, `trial_conditions`,
+  `trial_documents`, `interventions`, and supporting `sponsors` relations.
+- **Supporting functions and procedures:** `set_updated_at` trigger function,
+  `get_or_create_sponsor()` lookup helper, and the `create_trial` procedure that
+  wraps trial insertion logic.
 
 ---
 
 ## 📂 Repository Structure
 
-*(em construção)*
+- `backend/` — Django project that layers session and admin capabilities on top
+  of the shared PostgreSQL schema.
+- `database/` — SQL definitions, stored procedure catalog, and bootstrap
+  automation for the clinical trials data model.
+- `docs/` — Reference guides for administrators, including legacy
+  authentication integration instructions.
+- `requirements.txt` — Python dependencies shared by the backend and database
+  tooling.
 
 ---
 
