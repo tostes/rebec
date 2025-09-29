@@ -49,6 +49,47 @@ A dedicated area in the repository will contain:
 
 ---
 
+## 🧭 Django Backend Setup
+
+The repository now includes a lightweight Django project in `backend/` that provides session
+management and admin capabilities on top of the shared PostgreSQL schema.
+
+### Database configuration
+
+`backend/backend/settings.py` reads the PostgreSQL connection details from the environment:
+
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=ctms
+export DB_USER=postgres
+export DB_PASSWORD=secret
+```
+
+Point these variables at the database that has been provisioned with the SQL assets under
+`database/sql/` (particularly `database/sql/auth_tables_postgres.sql`). The Django project
+authenticates directly against the existing `auth_*` tables that were created by those scripts.
+
+### Running Django migrations without touching `auth_*`
+
+The project ships with a database router (`backend/backend/dbrouters.py`) that prevents Django
+from managing migrations for the `auth` and `contenttypes` applications. This allows the framework
+to read/write the shared tables while leaving their schema under manual control.
+
+After setting the database environment variables, apply the remaining Django core migrations
+(sessions, admin, messages, etc.) normally:
+
+```bash
+cd backend
+python manage.py migrate --noinput
+```
+
+Because of the router, the migrate command will skip any schema changes for the shared `auth_*`
+tables while still recording their migration state. You can now start the Django admin and
+authenticate users with the credentials stored in those existing tables.
+
+---
+
 ## 🔒 Integração com autenticação MySQL legada
 
 - Consulte o guia [docs/mysql-auth-integration.md](docs/mysql-auth-integration.md) para alinhar o esquema `auth_*` com o esperado pelo Django e configurar múltiplos bancos.
