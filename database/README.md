@@ -75,6 +75,22 @@ The bootstrap script accepts a PostgreSQL connection in one of two ways:
 On success the script prints progress for each SQL file and exits after the
 schema and seed data have been applied.
 
+### Idempotent DDL deployment
+
+During execution the bootstrapper now inspects each SQL file and compares the
+`CREATE TABLE`/`VIEW`/`FUNCTION`/`PROCEDURE` statements against the current
+database definitions using `information_schema`/`pg_catalog`. When a stored
+object already matches the checked-in definition the script skips re-applying
+that block and logs the skip so administrators know no changes were required.
+Only differing objects are executed, which keeps reruns safe while still
+catching drift. Files that contain non-DDL statements (such as seed data) are
+always executed.
+
+The stored procedure catalog in `stored_procedures/procedures.json` continues to
+drive function/procedure deployment. Entries flagged with `"updated": false`
+are executed regardless of previous runs so that curated routines can be
+redeployed intentionally.
+
 ## Managing Stored Procedures
 
 Stored procedures and functions live in `database/stored_procedures/` as

@@ -61,6 +61,8 @@ individual scripts:
 3. The script applies the schema files in dependency order, deploys the
    procedures declared in `database/stored_procedures/procedures.json`, and
    finally loads the seed data from `database/sql/vocabulary_seed.sql`.
+   Objects whose definitions already match the repository are detected via
+   `pg_catalog` and skipped with a log message so reruns remain idempotent.
 
 ### Key schema components
 
