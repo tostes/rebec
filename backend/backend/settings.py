@@ -65,6 +65,11 @@ DATABASES = {
 
 DATABASE_ROUTERS = ["backend.dbrouters.AuthRouter"]
 
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "backend.hashers.sha1_hasher.LegacySHA1PasswordHasher",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
