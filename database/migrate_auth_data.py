@@ -1,4 +1,9 @@
-"""Utility to migrate Django auth data from legacy MySQL to PostgreSQL."""
+"""Utility to migrate Django auth data from legacy MySQL to PostgreSQL.
+
+The migration can now work with either an explicit list of source columns or a
+set of columns to ignore for each table, ensuring inserts only reference fields
+that exist in the target schema.
+"""
 from __future__ import annotations
 
 import argparse
@@ -25,18 +30,22 @@ class TableSpec:
     pk: str = "id"
     unique_checks: Sequence[Sequence[str]] = ()
     boolean_columns: Sequence[str] = ()
+    columns: Optional[Sequence[str]] = None
+    ignore_columns: Sequence[str] = ()
 
 
 TABLE_SPECS: Sequence[TableSpec] = (
     TableSpec(
         "django_content_type",
         unique_checks=(("app_label", "model"),),
+        columns=("id", "app_label", "model"),
     ),
     TableSpec(
         "auth_permission",
         unique_checks=(("content_type_id", "codename"),),
+        columns=("id", "name", "content_type_id", "codename"),
     ),
-    TableSpec("auth_group", unique_checks=(("name",),)),
+    TableSpec("auth_group", unique_checks=(("name",),), columns=("id", "name")),
     TableSpec(
         "auth_user",
         unique_checks=(("username",),),
@@ -249,6 +258,22 @@ def _reset_identity(pg_cursor: psycopg2.extensions.cursor, table: TableSpec) -> 
     pg_cursor.execute(query, (sequence_name,))
 
 
+def _get_postgres_columns(
+    pg_cursor: psycopg2.extensions.cursor, table_name: str
+) -> List[str]:
+    pg_cursor.execute(
+        """
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = %s
+        ORDER BY ordinal_position
+        """,
+        (table_name,),
+    )
+    return [row[0] for row in pg_cursor.fetchall()]
+
+
 def migrate_table(
     mysql_conn: pymysql.connections.Connection,
     pg_conn: psycopg2.extensions.connection,
@@ -258,9 +283,33 @@ def migrate_table(
 ) -> None:
     LOGGER.info("Migrating table %s", table.name)
     inserted = 0
+    with pg_conn.cursor() as pg_cursor:
+        destination_columns = _get_postgres_columns(pg_cursor, table.name)
+    destination_column_set = set(destination_columns)
     with mysql_conn.cursor() as mysql_cursor:
-        mysql_cursor.execute(f"SELECT * FROM {table.name} ORDER BY {table.pk}")
-        column_order = [desc[0] for desc in mysql_cursor.description]
+        select_clause = (
+            ", ".join(table.columns) if table.columns else "*"
+        )
+        mysql_cursor.execute(
+            f"SELECT {select_clause} FROM {table.name} ORDER BY {table.pk}"
+        )
+        source_columns = [desc[0] for desc in mysql_cursor.description]
+        source_column_set = set(source_columns)
+        ignore_set = set(table.ignore_columns)
+        preferred_order = list(table.columns) if table.columns else list(destination_columns)
+        if not preferred_order:
+            preferred_order = source_columns
+        column_order = [
+            column
+            for column in preferred_order
+            if column in destination_column_set
+            and column in source_column_set
+            and column not in ignore_set
+        ]
+        if not column_order:
+            raise MigrationError(
+                f"No common columns found for table {table.name}."
+            )
         while True:
             rows = mysql_cursor.fetchmany(batch_size)
             if not rows:
