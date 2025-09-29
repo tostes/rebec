@@ -76,11 +76,12 @@ The project ships with a database router (`backend/backend/dbrouters.py`) that p
 from managing migrations for the `auth` and `contenttypes` applications. This allows the framework
 to read/write the shared tables while leaving their schema under manual control.
 
-After setting the database environment variables, apply the remaining Django core migrations
-(sessions, admin, messages, etc.) normally:
+After setting the database environment variables, install the Python dependencies and apply the
+remaining Django core migrations (sessions, admin, messages, etc.) normally:
 
 ```bash
 cd backend
+pip install -r ../requirements.txt
 python manage.py migrate --noinput
 ```
 
