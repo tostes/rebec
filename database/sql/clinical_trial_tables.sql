@@ -26,9 +26,11 @@ CREATE TABLE IF NOT EXISTS trial_countries (
     trial_id INTEGER NOT NULL REFERENCES trials(trial_id) ON DELETE CASCADE,
     country_id INTEGER NOT NULL REFERENCES countries(country_id),
     city TEXT,
-    site_name TEXT,
-    UNIQUE (trial_id, country_id, COALESCE(city, ''), COALESCE(site_name, ''))
+    site_name TEXT
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS trial_countries_unique_idx
+    ON trial_countries (trial_id, country_id, COALESCE(city, ''), COALESCE(site_name, ''));
 
 CREATE TABLE IF NOT EXISTS interventions (
     intervention_id SERIAL PRIMARY KEY,
