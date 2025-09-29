@@ -1,0 +1,18 @@
+[
+  {
+    "name": "get_or_create_sponsor",
+    "description": "Function that returns the sponsor identifier, creating a new sponsor row when necessary.",
+    "filename": "get_or_create_sponsor.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "create_trial",
+    "description": "Procedure that inserts a clinical trial record and resolves lookup identifiers.",
+    "filename": "create_trial.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  }
+]

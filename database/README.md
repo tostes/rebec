@@ -12,9 +12,10 @@ clinical trial administration database.
   2. `auth_tables_postgres.sql` — Django authentication and content type
      tables compatible with PostgreSQL.
   3. `clinical_trial_tables.sql` — core trial entities and relationships.
-  4. `supporting_objects.sql` — triggers, helper functions, and stored
-     procedures supporting the application.
+  4. `supporting_objects.sql` — shared triggers and helper functions.
   5. `vocabulary_seed.sql` — initial lookup data for the vocabulary tables.
+- `stored_procedures/` — individual stored procedure/function definitions
+  and the deployment metadata used by the bootstrapper.
 - `bootstrap.py` — Python script that connects to PostgreSQL, executes the
   schema, and loads the seed data.
 
@@ -73,6 +74,35 @@ The bootstrap script accepts a PostgreSQL connection in one of two ways:
 
 On success the script prints progress for each SQL file and exits after the
 schema and seed data have been applied.
+
+## Managing Stored Procedures
+
+Stored procedures and functions live in `database/stored_procedures/` as
+individual `.sql` files. The module `config.py` in the same directory exposes
+the deployment metadata consumed by `bootstrap.py`.
+
+1. **Add or update a stored procedure definition**
+   - Create (or edit) a file named after the procedure/function, e.g.
+     `create_trial.sql`.
+   - Only the SQL for that single object should live in the file.
+
+2. **Describe the procedure in the metadata**
+   - Edit `procedures.json` and add an object with the keys `name`,
+     `description`, `filename`, `date_creation`, `date_update`, and `updated`.
+   - Set `filename` to the relative SQL file name and leave `date_update` set to
+     `null` (or a previous ISO date) when introducing a new revision.
+   - When a definition changes, update the `description` as needed and set
+     `updated` back to `false` to ensure the bootstrapper deploys it on the next
+     run.
+
+3. **Sync procedures to the database**
+   - Run the bootstrap script as described above: `python -m database.bootstrap`.
+   - The script executes any SQL file whose metadata has `updated: false` and
+     then flips the flag to `true` with an updated `date_update` timestamp in
+     `procedures.json`.
+
+These steps let administrators track which stored procedures have been deployed
+and re-run the synchronization whenever a definition changes.
 
 ## Auth Data Migration from MySQL
 
