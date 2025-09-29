@@ -265,29 +265,41 @@ def migrate_table(
             rows = mysql_cursor.fetchmany(batch_size)
             if not rows:
                 break
-            with pg_conn:
-                with pg_conn.cursor() as pg_cursor:
-                    to_insert: List[Tuple[object, ...]] = []
-                    for row in rows:
-                        _convert_booleans(row, table.boolean_columns)
-                        conflict = _check_conflicts(pg_cursor, table, row)
-                        if conflict:
-                            skipped.append(conflict)
-                            LOGGER.warning("Skipping row: %s", conflict.as_message())
-                            continue
-                        values = tuple(row.get(column) for column in column_order)
-                        to_insert.append(values)
-                    if to_insert:
-                        psycopg2.extras.execute_values(
-                            pg_cursor,
-                            f"INSERT INTO {table.name} ({', '.join(column_order)}) VALUES %s",
-                            to_insert,
-                        )
-                        inserted += len(to_insert)
+            pg_cursor = pg_conn.cursor()
+            try:
+                to_insert: List[Tuple[object, ...]] = []
+                for row in rows:
+                    _convert_booleans(row, table.boolean_columns)
+                    conflict = _check_conflicts(pg_cursor, table, row)
+                    if conflict:
+                        skipped.append(conflict)
+                        LOGGER.warning("Skipping row: %s", conflict.as_message())
+                        continue
+                    values = tuple(row.get(column) for column in column_order)
+                    to_insert.append(values)
+                if to_insert:
+                    psycopg2.extras.execute_values(
+                        pg_cursor,
+                        f"INSERT INTO {table.name} ({', '.join(column_order)}) VALUES %s",
+                        to_insert,
+                    )
+                    inserted += len(to_insert)
+                pg_conn.commit()
+            except Exception:
+                pg_conn.rollback()
+                raise
+            finally:
+                pg_cursor.close()
             LOGGER.debug("Processed batch of %d rows from %s", len(rows), table.name)
-    with pg_conn:
-        with pg_conn.cursor() as pg_cursor:
-            _reset_identity(pg_cursor, table)
+    pg_cursor = pg_conn.cursor()
+    try:
+        _reset_identity(pg_cursor, table)
+        pg_conn.commit()
+    except Exception:
+        pg_conn.rollback()
+        raise
+    finally:
+        pg_cursor.close()
     LOGGER.info("Inserted %d rows into %s", inserted, table.name)
 
 
@@ -305,11 +317,12 @@ def main() -> None:
     LOGGER.debug("PostgreSQL connection parameters resolved to: %s", postgres_params)
 
     skipped: List[SkippedRecord] = []
-    with open_mysql_connection(mysql_params) as mysql_conn:
-        with open_postgres_connection(postgres_params) as pg_conn:
-            pg_conn.autocommit = False
-            for table in TABLE_SPECS:
-                migrate_table(mysql_conn, pg_conn, table, args.batch_size, skipped)
+    with open_mysql_connection(mysql_params) as mysql_conn, open_postgres_connection(
+        postgres_params
+    ) as pg_conn:
+        pg_conn.autocommit = False
+        for table in TABLE_SPECS:
+            migrate_table(mysql_conn, pg_conn, table, args.batch_size, skipped)
 
     if skipped:
         LOGGER.warning("%d records were skipped during migration:", len(skipped))
