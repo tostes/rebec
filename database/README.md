@@ -5,9 +5,9 @@ clinical trial administration database.
 
 ## Contents
 
-- `sql/` — schema definition and seed data scripts executed in order by the
+ - `sql/` — schema definition and seed data scripts executed in order by the
   bootstrapper:
-  1. `vocabulary_tables.sql` — controlled vocabularies (countries,
+  1. `vocabulary_tables.sql` — controlled vocabularies (vocabulary_country,
      recruitment statuses, etc.).
   2. `auth_tables_postgres.sql` — Django authentication and content type
      tables compatible with PostgreSQL.

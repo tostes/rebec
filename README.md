@@ -31,12 +31,14 @@ The workflow of the clinical trials registry is as follows:
 
 The PostgreSQL assets that ship with the project live under `database/`:
 
-- `database/sql/vocabulary_tables.sql` defines reference data such as `countries`,
-  `recruitment_statuses`, `intervention_types`, `study_phases`, and
-  `condition_categories`.
-- `database/sql/clinical_trial_tables.sql` provisions the core `trials`
-  relations, including `trials`, `trial_countries`, `interventions`,
-  `trial_conditions`, `trial_documents`, and related sponsor lookups.
+- `database/sql/vocabulary_tables.sql` defines reference data such as
+  `vocabulary_country`, `vocabulary_recruitment_status`,
+  `vocabulary_intervention_type`, `vocabulary_study_phase`, and
+  `vocabulary_condition_category`.
+- `database/sql/clinical_trial_tables.sql` provisions the core `ct`
+  relations, including `trials`, `research_institutions`,
+  `trial_countries`, `interventions`, `trial_conditions`,
+  `trial_documents`, status history tracking, and related sponsor lookups.
 - `database/sql/supporting_objects.sql` adds cross-cutting helpers (e.g. the
   `set_updated_at` trigger) that keep timestamps current.
 - `database/sql/vocabulary_seed.sql` pre-populates controlled vocabularies for
@@ -66,8 +68,9 @@ individual scripts:
 
 ### Key schema components
 
-- **Vocabulary tables:** `countries`, `recruitment_statuses`, `intervention_types`,
-  `study_phases`, `condition_categories`.
+- **Vocabulary tables:** `vocabulary_country`,
+  `vocabulary_recruitment_status`, `vocabulary_intervention_type`,
+  `vocabulary_study_phase`, `vocabulary_condition_category`.
 - **Core `ct_*` tables:** `trials`, `trial_countries`, `trial_conditions`,
   `trial_documents`, `interventions`, and supporting `sponsors` relations.
 - **Supporting functions and procedures:** `set_updated_at` trigger function,

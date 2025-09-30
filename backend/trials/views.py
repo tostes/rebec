@@ -214,31 +214,31 @@ class TrialCreateView(LoginRequiredMixin, TemplateView):
         }
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT status_code, COALESCE(description, status_code)"
-                " FROM recruitment_statuses ORDER BY description, status_code"
+                "SELECT code, COALESCE(description, code)"
+                " FROM vocabulary_recruitment_status ORDER BY description, code"
             )
             reference_data["recruitment_statuses"] = [(row[0], row[1]) for row in cursor.fetchall()]
 
             cursor.execute(
-                "SELECT phase_code, COALESCE(description, phase_code)"
-                " FROM study_phases ORDER BY description, phase_code"
+                "SELECT code, COALESCE(description, code)"
+                " FROM vocabulary_study_phase ORDER BY description, code"
             )
             reference_data["study_phases"] = [(row[0], row[1]) for row in cursor.fetchall()]
 
             cursor.execute(
-                "SELECT country_id, name FROM countries ORDER BY name"
+                "SELECT id, name FROM vocabulary_country ORDER BY name"
             )
             reference_data["countries"] = [(row[0], row[1]) for row in cursor.fetchall()]
 
             cursor.execute(
-                "SELECT intervention_type_id, COALESCE(description, type_code)"
-                " FROM intervention_types ORDER BY description, type_code"
+                "SELECT id, COALESCE(description, code)"
+                " FROM vocabulary_intervention_type ORDER BY description, code"
             )
             reference_data["intervention_types"] = [(row[0], row[1]) for row in cursor.fetchall()]
 
             cursor.execute(
-                "SELECT condition_category_id, COALESCE(name, category_code)"
-                " FROM condition_categories ORDER BY name, category_code"
+                "SELECT id, COALESCE(name, code)"
+                " FROM vocabulary_condition_category ORDER BY name, code"
             )
             reference_data["condition_categories"] = [(row[0], row[1]) for row in cursor.fetchall()]
 
@@ -257,6 +257,7 @@ class TrialCreateView(LoginRequiredMixin, TemplateView):
                     cleaned_data.get("lead_sponsor_name") or None,
                     cleaned_data.get("lead_sponsor_type") or None,
                     cleaned_data.get("lead_sponsor_email") or None,
+                    None,
                 ],
             )
             cursor.execute(
