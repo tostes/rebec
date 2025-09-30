@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Sequence, Tuple, Union
 
 from django import forms
 from django.forms import BaseFormSet, formset_factory
 from django.utils.translation import gettext_lazy as _
 
 
-ChoiceList = Sequence[tuple[str | int, str]]
+ChoiceList = Sequence[Tuple[Union[str, int], str]]
 
 
 class TrialForm(forms.Form):
