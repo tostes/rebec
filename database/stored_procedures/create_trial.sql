@@ -6,7 +6,8 @@ CREATE OR REPLACE PROCEDURE create_trial(
     p_brief_summary TEXT DEFAULT NULL,
     p_lead_sponsor_name TEXT DEFAULT NULL,
     p_lead_sponsor_type TEXT DEFAULT NULL,
-    p_lead_sponsor_email TEXT DEFAULT NULL
+    p_lead_sponsor_email TEXT DEFAULT NULL,
+    p_responsible_institution_id INTEGER DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$
@@ -15,18 +16,18 @@ DECLARE
     v_study_phase_id INTEGER;
     v_lead_sponsor_id INTEGER;
 BEGIN
-    SELECT recruitment_status_id INTO v_recruitment_status_id
-    FROM recruitment_statuses
-    WHERE status_code = p_recruitment_status_code;
+    SELECT id INTO v_recruitment_status_id
+    FROM vocabulary_recruitment_status
+    WHERE code = p_recruitment_status_code;
 
     IF v_recruitment_status_id IS NULL THEN
         RAISE EXCEPTION 'Unknown recruitment status code: %', p_recruitment_status_code;
     END IF;
 
     IF p_study_phase_code IS NOT NULL THEN
-        SELECT study_phase_id INTO v_study_phase_id
-        FROM study_phases
-        WHERE phase_code = p_study_phase_code;
+        SELECT id INTO v_study_phase_id
+        FROM vocabulary_study_phase
+        WHERE code = p_study_phase_code;
 
         IF v_study_phase_id IS NULL THEN
             RAISE EXCEPTION 'Unknown study phase code: %', p_study_phase_code;
@@ -41,7 +42,8 @@ BEGIN
         recruitment_status_id,
         study_phase_id,
         brief_summary,
-        lead_sponsor_id
+        lead_sponsor_id,
+        responsible_institution_id
     )
     VALUES (
         p_public_identifier,
@@ -49,7 +51,8 @@ BEGIN
         v_recruitment_status_id,
         v_study_phase_id,
         p_brief_summary,
-        v_lead_sponsor_id
+        v_lead_sponsor_id,
+        p_responsible_institution_id
     );
 END;
 $$;

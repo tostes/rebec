@@ -1,34 +1,34 @@
--- Vocabulary tables for clinical trial administration
--- These tables hold controlled vocabularies referenced by the core schema.
+-- Vocabulary tables for clinical trial administration (ct schema)
+-- Updated naming aligns with new ct dump conventions.
 
-CREATE TABLE IF NOT EXISTS countries (
-    country_id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS vocabulary_country (
+    id SERIAL PRIMARY KEY,
     iso_alpha2 CHAR(2) NOT NULL UNIQUE,
     iso_alpha3 CHAR(3) NOT NULL UNIQUE,
     name TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS recruitment_statuses (
-    recruitment_status_id SERIAL PRIMARY KEY,
-    status_code TEXT NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS vocabulary_recruitment_status (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS intervention_types (
-    intervention_type_id SERIAL PRIMARY KEY,
-    type_code TEXT NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS vocabulary_intervention_type (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS study_phases (
-    study_phase_id SERIAL PRIMARY KEY,
-    phase_code TEXT NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS vocabulary_study_phase (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS condition_categories (
-    condition_category_id SERIAL PRIMARY KEY,
-    category_code TEXT NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS vocabulary_condition_category (
+    id SERIAL PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     description TEXT
 );

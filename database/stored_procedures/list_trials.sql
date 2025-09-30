@@ -8,15 +8,15 @@ AS $$
         'official_title', t.official_title,
         'brief_summary', t.brief_summary,
         'recruitment_status', jsonb_build_object(
-            'id', rs.recruitment_status_id,
-            'code', rs.status_code,
+            'id', rs.id,
+            'code', rs.code,
             'description', rs.description
         ),
         'study_phase', CASE
-            WHEN sp.study_phase_id IS NULL THEN NULL
+            WHEN sp.id IS NULL THEN NULL
             ELSE jsonb_build_object(
-                'id', sp.study_phase_id,
-                'code', sp.phase_code,
+                'id', sp.id,
+                'code', sp.code,
                 'description', sp.description
             )
         END,
@@ -31,6 +31,20 @@ AS $$
                 'contact_email', s.contact_email
             )
         END,
+        'responsible_institution', CASE
+            WHEN ri.research_institution_id IS NULL THEN NULL
+            ELSE jsonb_build_object(
+                'research_institution_id', ri.research_institution_id,
+                'name', ri.name,
+                'country', jsonb_build_object(
+                    'id', vc.id,
+                    'code', vc.iso_alpha2,
+                    'name', vc.name
+                ),
+                'city', ri.city,
+                'state_province', ri.state_province
+            )
+        END,
         'countries', COALESCE(country_data.countries, '[]'::jsonb),
         'interventions', COALESCE(intervention_data.interventions, '[]'::jsonb),
         'conditions', COALESCE(condition_data.conditions, '[]'::jsonb),
@@ -39,9 +53,11 @@ AS $$
         'updated_at', to_jsonb(t.updated_at)
     )
     FROM trials AS t
-    JOIN recruitment_statuses AS rs ON rs.recruitment_status_id = t.recruitment_status_id
-    LEFT JOIN study_phases AS sp ON sp.study_phase_id = t.study_phase_id
+    JOIN vocabulary_recruitment_status AS rs ON rs.id = t.recruitment_status_id
+    LEFT JOIN vocabulary_study_phase AS sp ON sp.id = t.study_phase_id
     LEFT JOIN sponsors AS s ON s.sponsor_id = t.lead_sponsor_id
+    LEFT JOIN research_institutions AS ri ON ri.research_institution_id = t.responsible_institution_id
+    LEFT JOIN vocabulary_country AS vc ON vc.id = ri.country_id
     LEFT JOIN LATERAL (
         SELECT jsonb_agg(
             jsonb_build_object(
@@ -50,11 +66,12 @@ AS $$
                 'country_code', c.iso_alpha2,
                 'country_name', c.name,
                 'city', tc.city,
-                'site_name', tc.site_name
+                'site_name', tc.site_name,
+                'research_institution_id', tc.research_institution_id
             ) ORDER BY c.name, tc.city, tc.site_name
         ) AS countries
         FROM trial_countries AS tc
-        JOIN countries AS c ON c.country_id = tc.country_id
+        JOIN vocabulary_country AS c ON c.id = tc.country_id
         WHERE tc.trial_id = t.trial_id
     ) AS country_data ON TRUE
     LEFT JOIN LATERAL (
@@ -64,14 +81,14 @@ AS $$
                 'name', i.name,
                 'description', i.description,
                 'intervention_type', jsonb_build_object(
-                    'id', it.intervention_type_id,
-                    'code', it.type_code,
+                    'id', it.id,
+                    'code', it.code,
                     'description', it.description
                 )
             ) ORDER BY i.name
         ) AS interventions
         FROM interventions AS i
-        JOIN intervention_types AS it ON it.intervention_type_id = i.intervention_type_id
+        JOIN vocabulary_intervention_type AS it ON it.id = i.intervention_type_id
         WHERE i.trial_id = t.trial_id
     ) AS intervention_data ON TRUE
     LEFT JOIN LATERAL (
@@ -80,10 +97,10 @@ AS $$
                 'trial_condition_id', tc.trial_condition_id,
                 'condition_name', tc.condition_name,
                 'condition_category', CASE
-                    WHEN cc.condition_category_id IS NULL THEN NULL
+                    WHEN cc.id IS NULL THEN NULL
                     ELSE jsonb_build_object(
-                        'id', cc.condition_category_id,
-                        'code', cc.category_code,
+                        'id', cc.id,
+                        'code', cc.code,
                         'name', cc.name,
                         'description', cc.description
                     )
@@ -91,7 +108,7 @@ AS $$
             ) ORDER BY tc.condition_name
         ) AS conditions
         FROM trial_conditions AS tc
-        LEFT JOIN condition_categories AS cc ON cc.condition_category_id = tc.condition_category_id
+        LEFT JOIN vocabulary_condition_category AS cc ON cc.id = tc.condition_category_id
         WHERE tc.trial_id = t.trial_id
     ) AS condition_data ON TRUE
     LEFT JOIN LATERAL (
