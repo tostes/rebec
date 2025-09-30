@@ -1,0 +1,163 @@
+[
+  {
+    "name": "auth_group",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "auth_group_permissions",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "auth_permission",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "auth_user",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "auth_user_groups",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "auth_user_user_permissions",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "django_content_type",
+    "filename": "auth_tables_postgres.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "interventions",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "research_institutions",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "sponsors",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trial_conditions",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trial_contacts",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trial_countries",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trial_documents",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trial_identifiers",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trial_status_history",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "trials",
+    "filename": "clinical_trial_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "vocabulary_country",
+    "filename": "vocabulary_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "vocabulary_institution",
+    "filename": "vocabulary_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "vocabulary_institution_nature",
+    "filename": "vocabulary_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "vocabulary_institution_scope",
+    "filename": "vocabulary_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "vocabulary_institution_type",
+    "filename": "vocabulary_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  },
+  {
+    "name": "vocabulary_intervention_category",
+    "filename": "vocabulary_tables.sql",
+    "date_creation": "2024-05-01",
+    "date_update": null,
+    "updated": false
+  }
+]

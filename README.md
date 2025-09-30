@@ -45,6 +45,10 @@ The PostgreSQL assets that ship with the project live under `database/`:
   immediate use after provisioning.
 - `database/sql/auth_tables_postgres.sql` mirrors the authentication tables used
   by Django so the backend can authenticate against PostgreSQL.
+- `database/sql/tables.json` catalogs every table managed by the bootstrap,
+  including the shared `auth_*` relations, their source SQL file, the last
+  execution date, and the `updated` flag that controls whether a script should
+  be reapplied.
 - `database/stored_procedures/` contains the stored procedure catalog governed
   by `procedures.json`. Each entry points at SQL source files such as
   `get_or_create_sponsor.sql` and `create_trial.sql` that are deployed during
@@ -65,6 +69,23 @@ individual scripts:
    finally loads the seed data from `database/sql/vocabulary_seed.sql`.
    Objects whose definitions already match the repository are detected via
    `pg_catalog` and skipped with a log message so reruns remain idempotent.
+
+#### Maintaining the table catalog
+
+- The tables orchestrated by the bootstrap are declared in
+  `database/sql/tables.json`. Each entry references a SQL file, the table name,
+  and bookkeeping fields (`date_creation`, `date_update`, `updated`).
+- To add a new table, create or update the appropriate SQL file, append a new
+  entry to `tables.json` with `"updated": false`, and run
+  `python -m database.bootstrap`. The script will execute the SQL and set the
+  flag back to `true`, mirroring the stored procedure deployment flow.
+- To modify an existing table definition, set `"updated": false` for the
+  relevant entry (or entries when multiple tables live in the same file) before
+  rerunning the bootstrap so the SQL is re-applied.
+- To retire a table, remove both the SQL definition and its metadata entry.
+  The bootstrap will warn if a SQL file defines tables that are missing from the
+  catalog or if metadata references a table that no longer exists, keeping the
+  process aligned with the stored procedure controller.
 
 ### Key schema components
 
