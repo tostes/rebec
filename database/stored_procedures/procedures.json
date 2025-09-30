@@ -16,8 +16,8 @@
     "updated": false
   },
   {
-    "name": "list_trials",
-    "description": "Function that returns clinical trial records with aggregated related metadata as JSON.",
+    "name": "get_full_trial_json_auto_multilang",
+    "description": "Function that builds the full clinical trial payload with automatic multi-language fields.",
     "filename": "list_trials.sql",
     "date_creation": "2025-09-30",
     "date_update": null,
