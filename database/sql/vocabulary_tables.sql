@@ -97,9 +97,11 @@ CREATE TABLE IF NOT EXISTS vocabulary_institution (
     website TEXT,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT vocabulary_institution_unique UNIQUE (name, COALESCE(legal_name, ''))
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS vocabulary_institution_name_legal_name_uniq
+    ON vocabulary_institution (name, COALESCE(legal_name, ''));
 
 ALTER SEQUENCE vocabulary_institution_id_seq OWNED BY vocabulary_institution.id;
 
