@@ -19,16 +19,16 @@
     <table id="trial-results" class="admin-table">
       <thead>
         <tr>
-          {% for header in headers %}
-          <th scope="col">{{ header|capfirst }}</th>
+          {% for column in columns %}
+          <th scope="col">{{ column.label }}</th>
           {% endfor %}
         </tr>
       </thead>
       <tbody>
         {% for trial in trials %}
         <tr class="row{% cycle '1' '2' %}">
-          {% for header in headers %}
-          <td>{{ trial|dict_get:header }}</td>
+          {% for column in columns %}
+          <td>{{ trial|dict_get:column.key|safe }}</td>
           {% endfor %}
         </tr>
         {% endfor %}
