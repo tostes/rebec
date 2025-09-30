@@ -29,7 +29,7 @@ class TrialListView(TemplateView):
         trials: list[dict[str, Any]] = []
         load_error = False
         try:
-            payload = self._call_list_trials()
+            payload = self._load_trials_payload()
         except Exception:  # pragma: no cover - defensive; logging could be added later
             payload = []
             load_error = True
@@ -50,19 +50,30 @@ class TrialListView(TemplateView):
         })
         return context
 
-    def _call_list_trials(self) -> Any:
+    def _load_trials_payload(self, ct_id: int | None = None) -> Any:
         with connection.cursor() as cursor:
-            cursor.callproc("list_trials")
-            row = cursor.fetchone()
-        if not row:
+            cursor.callproc("get_full_trial_json_auto_multilang", [ct_id])
+            rows = cursor.fetchall()
+
+        if not rows:
             return []
-        raw_payload = row[0]
-        if isinstance(raw_payload, str):
+
+        if len(rows) == 1:
+            raw_payload = rows[0][0]
+        else:
+            raw_payload = [row[0] for row in rows]
+
+        return self._decode_payload(raw_payload)
+
+    def _decode_payload(self, payload: Any) -> Any:
+        if isinstance(payload, list):
+            return [self._decode_payload(item) for item in payload if item is not None]
+        if isinstance(payload, str):
             try:
-                return json.loads(raw_payload)
+                return json.loads(payload)
             except json.JSONDecodeError:
                 return []
-        return raw_payload
+        return payload
 
 
 class TrialCreateView(LoginRequiredMixin, TemplateView):

@@ -16,9 +16,9 @@
     "updated": false
   },
   {
-    "name": "list_trials",
-    "description": "Function that returns clinical trial records with aggregated related metadata as JSON.",
-    "filename": "list_trials.sql",
+    "name": "get_full_trial_json_auto_multilang",
+    "description": "Function that returns the full clinical trial JSON payload sourced from the ct_* tables.",
+    "filename": "get_full_trial_json_auto_multilang.sql",
     "date_creation": "2025-09-30",
     "date_update": null,
     "updated": false
