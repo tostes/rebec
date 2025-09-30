@@ -11,10 +11,10 @@ $$ LANGUAGE plpgsql;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_trigger WHERE tgname = 'trials_set_updated_at'
+        SELECT 1 FROM pg_trigger WHERE tgname = 'ct_set_updated_at'
     ) THEN
-        CREATE TRIGGER trials_set_updated_at
-        BEFORE UPDATE ON trials
+        CREATE TRIGGER ct_set_updated_at
+        BEFORE UPDATE ON ct
         FOR EACH ROW
         EXECUTE FUNCTION set_updated_at();
     END IF;
