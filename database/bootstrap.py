@@ -15,31 +15,31 @@ Example usage::
     export DB_PASSWORD=secret
     python -m database.bootstrap
 
-The script executes all SQL files in ``database/sql`` in a deterministic order and
-wraps the process in a transaction. Seed data is loaded after the schema and
-supporting objects are created.
+The script consults ``database/sql/tables.json`` to determine which schema
+files require execution. Entries flagged with ``"updated": false`` trigger the
+corresponding SQL file, after which the metadata is updated automatically. Seed
+data is loaded after the schema and supporting objects are created.
 """
 
 from __future__ import annotations
 
 import os
 import re
+from collections import OrderedDict
 from datetime import date
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 
 import psycopg2
 
+from database.sql.catalog import load_table_catalog, save_table_catalog
 from database.stored_procedures.config import load_config, save_config
 
 BASE_DIR = Path(__file__).resolve().parent
 SQL_DIR = BASE_DIR / "sql"
 STORED_PROCEDURES_DIR = BASE_DIR / "stored_procedures"
 
-SCHEMA_FILES = [
-    "vocabulary_tables.sql",
-    "auth_tables_postgres.sql",
-    "clinical_trial_tables.sql",
+SUPPORTING_FILES = [
     "supporting_objects.sql",
     "vocabulary_seed.sql",
 ]
@@ -302,7 +302,12 @@ def _definitions_equal(file_sql: str, database_sql: Optional[str]) -> bool:
     return _normalize_sql(file_sql) == _normalize_sql(database_sql)
 
 
-def execute_file(cursor, path: Path) -> bool:
+def execute_file(
+    cursor,
+    path: Path,
+    *,
+    expected_tables: Optional[Set[str]] = None,
+) -> bool:
     with path.open("r", encoding="utf-8") as handle:
         sql = handle.read()
 
@@ -311,9 +316,16 @@ def execute_file(cursor, path: Path) -> bool:
     print(f"Inspecting {relative_path} for changes ...")
 
     executed_any = False
+    seen_tables: Set[str] = set()
+    unexpected_tables: Set[str] = set()
     for statement in statements:
         object_type, name, args = _identify_object(statement)
         if object_type and name:
+            if object_type == "TABLE":
+                _, table_name = _schema_and_name(name)
+                seen_tables.add(table_name)
+                if expected_tables is not None and table_name not in expected_tables:
+                    unexpected_tables.add(table_name)
             existing = _existing_ddl(cursor, object_type, name, args)
             if _definitions_equal(statement, existing):
                 print(
@@ -327,7 +339,63 @@ def execute_file(cursor, path: Path) -> bool:
     if not executed_any:
         print(f"  No changes required for {relative_path}.")
 
+    if expected_tables is not None:
+        missing_tables = expected_tables - seen_tables
+        if missing_tables:
+            missing_list = ", ".join(sorted(missing_tables))
+            print(
+                "  Warning: catalog lists tables not found in"
+                f" {relative_path}: {missing_list}."
+            )
+    if unexpected_tables:
+        unexpected_list = ", ".join(sorted(unexpected_tables))
+        print(
+            "  Warning:"
+            f" {relative_path} defines tables missing from the catalog: {unexpected_list}."
+        )
+
     return executed_any
+
+
+def deploy_tables(cursor) -> None:
+    metadata = load_table_catalog()
+    files: "OrderedDict[str, List[dict]]" = OrderedDict()
+    for entry in metadata:
+        filename = entry.get("filename")
+        name = entry.get("name")
+        if not filename:
+            raise ValueError(
+                f"Table metadata for {entry.get('name', '<unknown>')} is missing a filename."
+            )
+        if not name:
+            raise ValueError(
+                f"Table metadata entry referencing {filename} is missing a name."
+            )
+        files.setdefault(filename, []).append(entry)
+
+    modified = False
+    for filename, entries in files.items():
+        sql_path = SQL_DIR / filename
+        if not sql_path.exists():
+            raise FileNotFoundError(
+                f"Table SQL file missing: {sql_path}"
+            )
+
+        outdated = [entry for entry in entries if not entry.get("updated")]
+        if not outdated:
+            continue
+
+        expected = {entry["name"] for entry in entries}
+        execute_file(cursor, sql_path, expected_tables=expected)
+
+        today = date.today().isoformat()
+        for entry in outdated:
+            entry["updated"] = True
+            entry["date_update"] = today
+        modified = True
+
+    if modified:
+        save_table_catalog(metadata)
 
 
 def deploy_stored_procedures(cursor) -> None:
@@ -366,7 +434,8 @@ def main() -> None:
     with psycopg2.connect(dsn) as connection:
         connection.autocommit = False
         with connection.cursor() as cursor:
-            for sql_file in iter_sql_files(SCHEMA_FILES):
+            deploy_tables(cursor)
+            for sql_file in iter_sql_files(SUPPORTING_FILES):
                 execute_file(cursor, sql_file)
             deploy_stored_procedures(cursor)
         connection.commit()
