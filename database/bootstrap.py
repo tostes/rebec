@@ -302,7 +302,7 @@ def _definitions_equal(file_sql: str, database_sql: Optional[str]) -> bool:
     return _normalize_sql(file_sql) == _normalize_sql(database_sql)
 
 
-def execute_file(cursor, path: Path) -> None:
+def execute_file(cursor, path: Path) -> bool:
     with path.open("r", encoding="utf-8") as handle:
         sql = handle.read()
 
@@ -327,6 +327,8 @@ def execute_file(cursor, path: Path) -> None:
     if not executed_any:
         print(f"  No changes required for {relative_path}.")
 
+    return executed_any
+
 
 def deploy_stored_procedures(cursor) -> None:
     metadata = load_config()
@@ -348,9 +350,10 @@ def deploy_stored_procedures(cursor) -> None:
                 f"Stored procedure SQL file missing: {sql_path}"
             )
 
-        execute_file(cursor, sql_path)
+        applied = execute_file(cursor, sql_path)
         entry["updated"] = True
-        entry["date_update"] = date.today().isoformat()
+        if applied:
+            entry["date_update"] = date.today().isoformat()
         modified = True
 
     if modified:
