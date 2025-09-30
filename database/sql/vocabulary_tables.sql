@@ -122,4 +122,126 @@ CREATE TABLE IF NOT EXISTS vocabulary_intervention_category (
 
 ALTER SEQUENCE vocabulary_intervention_category_id_seq OWNED BY vocabulary_intervention_category.id;
 
--- … (continua com intervention_type, subtype, study_phase etc. conforme `main`)
+-- Detailed classification for interventions grouped under broader categories.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_intervention_type_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_intervention_type (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_intervention_type_id_seq'),
+    intervention_category_id BIGINT REFERENCES vocabulary_intervention_category(id),
+    code VARCHAR(50) NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_intervention_type_code_uniq UNIQUE (code)
+);
+
+ALTER SEQUENCE vocabulary_intervention_type_id_seq OWNED BY vocabulary_intervention_type.id;
+
+-- Granular breakdown for intervention types capturing sub classifications.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_intervention_subtype_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_intervention_subtype (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_intervention_subtype_id_seq'),
+    intervention_type_id BIGINT NOT NULL REFERENCES vocabulary_intervention_type(id),
+    code VARCHAR(50) NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_intervention_subtype_type_code_uniq UNIQUE (intervention_type_id, code)
+);
+
+ALTER SEQUENCE vocabulary_intervention_subtype_id_seq OWNED BY vocabulary_intervention_subtype.id;
+
+-- Canonical registry of interventions harmonised across data sources.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_intervention_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_intervention (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_intervention_id_seq'),
+    intervention_type_id BIGINT REFERENCES vocabulary_intervention_type(id),
+    intervention_subtype_id BIGINT REFERENCES vocabulary_intervention_subtype(id),
+    code VARCHAR(100),
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_intervention_code_uniq UNIQUE (code)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS vocabulary_intervention_name_type_uniq
+    ON vocabulary_intervention (LOWER(name), COALESCE(intervention_type_id, 0));
+
+ALTER SEQUENCE vocabulary_intervention_id_seq OWNED BY vocabulary_intervention.id;
+
+-- Recruitment lifecycle statuses for registered clinical trials.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_recruitment_status_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_recruitment_status (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_recruitment_status_id_seq'),
+    code VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_recruitment_status_code_uniq UNIQUE (code)
+);
+
+ALTER SEQUENCE vocabulary_recruitment_status_id_seq OWNED BY vocabulary_recruitment_status.id;
+
+-- Study phases aligned with the harmonised clinical trial data model.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_study_phase_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_study_phase (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_study_phase_id_seq'),
+    code VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_study_phase_code_uniq UNIQUE (code)
+);
+
+ALTER SEQUENCE vocabulary_study_phase_id_seq OWNED BY vocabulary_study_phase.id;
+
+-- Controlled vocabulary grouping therapeutic condition categories.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_condition_category_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_condition_category (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_condition_category_id_seq'),
+    code VARCHAR(50) NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_condition_category_code_uniq UNIQUE (code)
+);
+
+ALTER SEQUENCE vocabulary_condition_category_id_seq OWNED BY vocabulary_condition_category.id;
+
+-- Secondary identifier types captured for harmonised registry references.
+-- Author: Diego Tostes – <https://www.linkedin.com/in/diegotostes/
+CREATE SEQUENCE IF NOT EXISTS vocabulary_secondary_identify_type_id_seq;
+
+CREATE TABLE IF NOT EXISTS vocabulary_secondary_identify_type (
+    id BIGINT PRIMARY KEY DEFAULT nextval('vocabulary_secondary_identify_type_id_seq'),
+    code VARCHAR(50) NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT vocabulary_secondary_identify_type_code_uniq UNIQUE (code)
+);
+
+ALTER SEQUENCE vocabulary_secondary_identify_type_id_seq OWNED BY vocabulary_secondary_identify_type.id;
