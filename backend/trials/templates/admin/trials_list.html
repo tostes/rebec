@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load trials_extras %}
+
+{% block title %}{% trans "Trials" %}{% endblock %}
+
+{% block content %}
+<div class="module">
+  <div class="module-header">
+    <h2>{% trans "Trials" %}</h2>
+    {% if user.is_authenticated %}
+    <a class="button" href="{% url 'admin:index' %}">{% trans "Create Trial" %}</a>
+    {% endif %}
+  </div>
+  {% if load_error %}
+  <p class="errornote">{% trans "There was a problem loading trials." %}</p>
+  {% elif trials %}
+  <div class="results">
+    <table id="trial-results" class="admin-table">
+      <thead>
+        <tr>
+          {% for header in headers %}
+          <th scope="col">{{ header|capfirst }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for trial in trials %}
+        <tr class="row{% cycle '1' '2' %}">
+          {% for header in headers %}
+          <td>{{ trial|dict_get:header }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="help">{% trans "No trials found." %}</p>
+  {% endif %}
+</div>
+{% endblock %}
