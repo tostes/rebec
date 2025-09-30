@@ -1,20 +1,20 @@
 CREATE OR REPLACE PROCEDURE create_trial(
-    p_public_identifier TEXT,
-    p_official_title TEXT,
+    p_register_id TEXT,
+    p_public_title TEXT,
     p_recruitment_status_code TEXT,
     p_study_phase_code TEXT DEFAULT NULL,
     p_brief_summary TEXT DEFAULT NULL,
-    p_lead_sponsor_name TEXT DEFAULT NULL,
-    p_lead_sponsor_type TEXT DEFAULT NULL,
-    p_lead_sponsor_email TEXT DEFAULT NULL,
-    p_responsible_institution_id INTEGER DEFAULT NULL
+    p_primary_sponsor_name TEXT DEFAULT NULL,
+    p_primary_sponsor_type TEXT DEFAULT NULL,
+    p_primary_sponsor_email TEXT DEFAULT NULL,
+    p_responsible_institution_id BIGINT DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_recruitment_status_id INTEGER;
-    v_study_phase_id INTEGER;
-    v_lead_sponsor_id INTEGER;
+    v_recruitment_status_id BIGINT;
+    v_study_phase_id BIGINT;
+    v_primary_sponsor_id BIGINT;
 BEGIN
     SELECT id INTO v_recruitment_status_id
     FROM vocabulary_recruitment_status
@@ -34,24 +34,26 @@ BEGIN
         END IF;
     END IF;
 
-    v_lead_sponsor_id := get_or_create_sponsor(p_lead_sponsor_name, p_lead_sponsor_type, p_lead_sponsor_email);
+    v_primary_sponsor_id := get_or_create_sponsor(p_primary_sponsor_name, p_primary_sponsor_type, p_primary_sponsor_email);
 
-    INSERT INTO trials (
-        public_identifier,
-        official_title,
+    INSERT INTO ct (
+        register_id,
+        public_title,
+        scientific_title,
         recruitment_status_id,
         study_phase_id,
         brief_summary,
-        lead_sponsor_id,
+        primary_sponsor_id,
         responsible_institution_id
     )
     VALUES (
-        p_public_identifier,
-        p_official_title,
+        p_register_id,
+        p_public_title,
+        p_public_title,
         v_recruitment_status_id,
         v_study_phase_id,
         p_brief_summary,
-        v_lead_sponsor_id,
+        v_primary_sponsor_id,
         p_responsible_institution_id
     );
 END;
